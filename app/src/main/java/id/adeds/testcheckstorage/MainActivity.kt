@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import id.adeds.testcheckstorage.ui.theme.TestCheckStorageTheme
 import java.io.File
@@ -32,11 +31,13 @@ class MainActivity : ComponentActivity() {
                 Column(
                     modifier = Modifier.padding(16.dp),
                 ) {
-                    Text(text = "free system: ${megabytesAvailable(systemPartitionDir())}")
-                    Text(text = "internal: ${megabytesAvailable(internalDir())}")
-                    Text(text = "external: ${megabytesAvailable(externalDir())}")
-                    Text(text = "filesDir: ${megabytesAvailable(filesDir.path)}")
-                    Text(text = "storageManager: ${checkStorageManager()}")
+                    Text(text = "StatFS free system: ${megabytesAvailable(systemPartitionDir())}")
+                    Text(text = "StatFS internal: ${megabytesAvailable(internalDir())}")
+                    Text(text = "StatFS external: ${megabytesAvailable(externalDir())}")
+                    Text(text = "StatFS filesDir: ${megabytesAvailable(filesDir.path)}")
+                    Text(text = "StorageManager internal: ${checkStorageManager(File(internalDir()))}")
+                    Text(text = "StorageManager external: ${checkStorageManager(File(externalDir()))}")
+                    Text(text = "StorageManager filesDir: ${checkStorageManager(filesDir)}")
                 }
             }
         }
@@ -44,13 +45,14 @@ class MainActivity : ComponentActivity() {
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-private fun Activity.checkStorageManager(): String? {
-    val externalStorageVolumes: Array<out File> = ContextCompat.getExternalFilesDirs(applicationContext, null)
-    val primaryExternalStorage = externalStorageVolumes[0]
-
+private fun Activity.checkStorageManager(file: File): String? {
     val storageManager = applicationContext.getSystemService<StorageManager>()
-    val appSpecificInternalDirUuid = storageManager?.getUuidForPath(filesDir)
-    return appSpecificInternalDirUuid?.let { bytesToHuman(storageManager.getAllocatableBytes(it).toDouble()) }
+    val appSpecificInternalDirUuid = storageManager?.getUuidForPath(file)
+    return appSpecificInternalDirUuid?.let {
+        bytesToHuman(
+            storageManager.getAllocatableBytes(it).toDouble()
+        )
+    }
 }
 
 private fun megabytesAvailable(path: String): String {
